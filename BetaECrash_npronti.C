@@ -17,10 +17,10 @@ void BetaECrash_npronti()
     gSystem->Load("libPhysics");
 
     TChain mc("KS_3PI0/h1");
-    mc.Add("/home/nadusia/Documents/Dane/mc/*.root");
+    mc.Add("/home/nadusia/Documents/KLOE-2_analysis/mc/*.root");
 
     TChain data("KS_3PI0/h1");
-    data.Add("/home/nadusia/Documents/Dane/data/*.root");
+    data.Add("/home/nadusia/Documents/KLOE-2_analysis/data/*.root");
 
     Float_t beta;
     Float_t poso[5];

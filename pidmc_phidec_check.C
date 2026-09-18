@@ -6,7 +6,7 @@ void pidmc_phidec_check()
     gSystem->Load("libPhysics");
 
     TChain mc("KS_3PI0/h1");
-    mc.Add("/home/nadusia/Documents/Dane/mc/*.root");
+    mc.Add("/home/nadusia/Documents/KLOE-2_analysis/mc/*.root");
 
     UChar_t nsel[4];
     UInt_t filfowd;
