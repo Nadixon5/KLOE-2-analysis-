@@ -5,7 +5,7 @@
 #include <TStyle.h>
 #include <TLegend.h>
 #include <TString.h>
-
+#include <map>
 #include <cmath>
 #include <iostream>
 
@@ -30,6 +30,7 @@ void BetaECrash_npronti()
     UShort_t Ecltag;
     Int_t vetocos;
     Int_t Crflag;
+    UInt_t phiwordmc;
 
     mc.SetBranchAddress("beta", &beta);
     mc.SetBranchAddress("poso", poso);
@@ -39,6 +40,7 @@ void BetaECrash_npronti()
     mc.SetBranchAddress("Crflag",&Crflag);
     mc.SetBranchAddress("filfowd", &filfowd);
     mc.SetBranchAddress("Ecltag", &Ecltag);
+    mc.SetBranchAddress("phiwordmc",&phiwordmc);
 
     data.SetBranchAddress("beta", &beta);
     data.SetBranchAddress("poso", poso);
@@ -61,6 +63,8 @@ void BetaECrash_npronti()
     TH1F *hEcrashData_All[11];
     TH1F *hEcrashData_Veto[11];
 
+    std::map<Char_t, std::map<UInt_t, Long64_t>> PhiCounts;
+    std::map<Char_t, std::map<UInt_t, Long64_t>> PhiCountsVeto;
 
     for(int n=0; n<=10; n++)
     {
@@ -89,23 +93,23 @@ void BetaECrash_npronti()
         hEcrashMC_All[n] =
             new TH1F(Form("hEcrashMC_All_npronti%d",n),
                      Form("MC KL crash energy, npronti = %d;E_{crash} [MeV];Events",n),
-                     100,100,3000);
+                     100,100,2800);
 
         hEcrashMC_Veto[n] =
             new TH1F(Form("hEcrashMC_Veto_npronti%d",n),
                      Form("MC KL crash energy after track veto, npronti = %d;E_{crash} [MeV];Events",n),
-                     100,100,3000);
+                     100,100,2800);
 
 
         hEcrashData_All[n] =
             new TH1F(Form("hEcrashData_All_npronti%d",n),
                      Form("DATA KL crash energy, npronti = %d;E_{crash} [MeV];Events",n),
-                     100,100,3000);
+                     100,100,2800);
 
         hEcrashData_Veto[n] =
             new TH1F(Form("hEcrashData_Veto_npronti%d",n),
                      Form("DATA KL crash energy after track veto, npronti = %d;E_{crash} [MeV];Events",n),
-                     100,100,3000);
+                     100,100,2800);
     }
 
     Long64_t nBetaMC   = 0;
@@ -119,6 +123,53 @@ void BetaECrash_npronti()
 
     Long64_t nMC = mc.GetEntries();
     Long64_t nData = data.GetEntries();
+
+    // Wypisanie phiwordmc dla energii większej od 900 MeV
+    for(Long64_t iev = 0; iev < nMC; iev++)
+    {
+        mc.GetEntry(iev);
+
+        double Ecrash = poso[4];
+
+        if(npronti != 6 && npronti != 7 && npronti != 8 && npronti!= 9) continue;
+
+        if(Ecrash < 900) continue;
+
+        PhiCounts[npronti][phiwordmc]++;
+
+        if(nsel[0] > 0) continue;
+
+        PhiCountsVeto[npronti][phiwordmc]++;
+    }
+
+    for(int np = 6; np <= 9; np++)
+    {
+        cout << endl;
+        cout << "              npronti = " << np << endl;
+        cout << "Phiwordmc                 Events" << endl;
+        cout << "--------------------------------------------------------" << endl;
+
+        for(auto const& entry : PhiCounts[np])
+        {
+            cout << entry.first
+                 << "                       "
+                 << entry.second
+                 << endl;
+        }
+        // Z TRACK VETO
+        cout << endl;
+        cout << "           npronti = " << np << "  Z TRACK VETO" << endl;
+        cout << "Phiwordmc                 Events" << endl;
+        cout << "--------------------------------------------------------" << endl;
+
+        for(auto const& entry : PhiCountsVeto[np])
+        {
+            cout << entry.first
+                 << "                       "
+                 << entry.second
+                 << endl;
+        }
+    }
 
     for(Long64_t ie=0; ie<nMC; ie++)
     {
@@ -143,10 +194,10 @@ void BetaECrash_npronti()
         hBetaMC_All[npronti]->Fill(beta);
         hEcrashMC_All[npronti]->Fill(Ecrash);
 
-        if(npronti==7){
-        nBetaMC++;
-        nEcrashMC++;
-        }
+        // if(npronti==7){
+        // nBetaMC++;
+        // nEcrashMC++;
+        // }
 
         //---TRACK VETO---//
         if(nsel[0] > 0) continue;
@@ -154,10 +205,10 @@ void BetaECrash_npronti()
         hBetaMC_Veto[npronti]->Fill(beta);
         hEcrashMC_Veto[npronti]->Fill(Ecrash);
 
-        if(npronti==7){
-        nBetaMCveto++;
-        nEcrashMCveto++;
-        }
+        // if(npronti==7){
+        // nBetaMCveto++;
+        // nEcrashMCveto++;
+        // }
     }
 
 
@@ -184,10 +235,10 @@ void BetaECrash_npronti()
         hBetaData_All[npronti]->Fill(beta);
         hEcrashData_All[npronti]->Fill(Ecrash);
 
-        if(npronti==7){
-        nBetaData++;
-        nEcrashData++;
-        }
+        // if(npronti==7){
+        // nBetaData++;
+        // nEcrashData++;
+        // }
 
         //---TRACK VETO---//
         if(nsel[0] > 0) continue;
@@ -195,23 +246,26 @@ void BetaECrash_npronti()
         hBetaData_Veto[npronti]->Fill(beta);
         hEcrashData_Veto[npronti]->Fill(Ecrash);
 
-        if(npronti==7){
-        nBetaDataveto++;
-        nEcrashDataveto++;
-        }
+        // if(npronti==7){
+        // nBetaDataveto++;
+        // nEcrashDataveto++;
+        // }
     }
 
-    cout << endl;
-    cout << "Events beta mc      : " << nBetaMC << "  ;Events beta mc veto    : " << nBetaMCveto << endl;
-    cout << "Events beta data    : " << nBetaData << "  ;Events beta data veto  : " << nBetaDataveto << endl;
-    cout << "Events Ecrash mc    : " << nEcrashMC << "  ;Events Ecrash mc veto  : " << nEcrashMCveto << endl;
-    cout << "Events Ecrash data  : " << nEcrashData << "  ;Events Ecrash data veto: " << nEcrashDataveto << endl;
+    // Sprawdzenie liczby zdarzeń dla danych i mc dla npronti = 7
+    // cout << endl;
+    // cout << "Events beta mc      : " << nBetaMC << "  ;Events beta mc veto    : " << nBetaMCveto << endl;
+    // cout << "Events beta data    : " << nBetaData << "  ;Events beta data veto  : " << nBetaDataveto << endl;
+    // cout << "Events Ecrash mc    : " << nEcrashMC << "  ;Events Ecrash mc veto  : " << nEcrashMCveto << endl;
+    // cout << "Events Ecrash data  : " << nEcrashData << "  ;Events Ecrash data veto: " << nEcrashDataveto << endl;
     
-    cout << endl;
-    cout << "Overflow = " << hEcrashMC_All[7]->GetBinContent(hEcrashMC_All[7]->GetNbinsX() + 1) << endl;
-    cout << "Overflow = " << hEcrashMC_Veto[7]->GetBinContent(hEcrashMC_Veto[7]->GetNbinsX() + 1) << endl;
-    cout << "Overflow = " << hEcrashData_All[7]->GetBinContent(hEcrashData_All[7]->GetNbinsX() + 1) << endl;
-    cout << "Overflow = " << hEcrashData_Veto[7]->GetBinContent(hEcrashData_Veto[7]->GetNbinsX() + 1) << endl;
+    // Sprawdzenie overflow w histogramach
+    // cout << endl;
+    // cout << "Overflow = " << hEcrashMC_All[7]->GetBinContent(hEcrashMC_All[7]->GetNbinsX() + 1) << endl;
+    // cout << "Overflow = " << hEcrashMC_Veto[7]->GetBinContent(hEcrashMC_Veto[7]->GetNbinsX() + 1) << endl;
+    // cout << "Overflow = " << hEcrashData_All[7]->GetBinContent(hEcrashData_All[7]->GetNbinsX() + 1) << endl;
+    // cout << "Overflow = " << hEcrashData_Veto[7]->GetBinContent(hEcrashData_Veto[7]->GetNbinsX() + 1) << endl;
+    // cout << endl;
 
     TFile *out = new TFile("KLOE_analysis_results/Beta_Ecrash_vs_npronti.root","RECREATE");
 
@@ -283,7 +337,7 @@ void BetaECrash_npronti()
             hBetaData_Veto[n]->Draw("E1 SAME");
         }
 
-        TLegend *leg = new TLegend(0.58,0.68,0.88,0.88);
+        TLegend *leg = new TLegend(0.65,0.68,0.88,0.88);
 
         leg->AddEntry(hBetaMC_All[n],"MC","l");
         leg->AddEntry(hBetaMC_Veto[n],"MC after track veto","l");
@@ -301,9 +355,10 @@ void BetaECrash_npronti()
         delete leg;
     }
 
-    for(int n=0; n<=10; n++)
+    for(int n=1; n<=10; n++)
     {
         c->Clear();
+        // c->SetLogy();
 
         hEcrashMC_All[n]->SetLineColor(kRed);
         hEcrashMC_All[n]->SetLineWidth(2);
@@ -324,15 +379,13 @@ void BetaECrash_npronti()
 
         hEcrashMC_All[n]->SetStats(0);
 
-        //hEcrashMC_All[n]->SetTitle(Form("KL crash energy, npronti = %d;E_{crash} [MeV];Events", n));
-
         hEcrashMC_All[n]->Draw("HIST");
         hEcrashMC_Veto[n]->Draw("HIST SAME");
 
         hEcrashData_All[n]->Draw("E1 SAME");
         hEcrashData_Veto[n]->Draw("E1 SAME");
 
-        TLegend *leg = new TLegend(0.55,0.68,0.88,0.88);
+        TLegend *leg = new TLegend(0.65,0.68,0.88,0.88);
 
         leg->AddEntry(hEcrashMC_All[n],"MC","l");
         leg->AddEntry(hEcrashMC_Veto[n],"MC after track veto","l");
