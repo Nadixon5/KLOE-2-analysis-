@@ -24,14 +24,9 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
     const double wData = 1.0 * 400;
 
     // Z dopasowania funkcji Gaussa
-    const double pionMass1MeanMC  = 137.157;
     const double pionMass1SigmaMC = 21.1367;
-    const double pionMass2MeanMC  = 136.595;
     const double pionMass2SigmaMC = 21.0655;
-
-    const double pionMass1MeanData  = 136.654;
     const double pionMass1SigmaData = 22.2932;
-    const double pionMass2MeanData  = 136.649;
     const double pionMass2SigmaData = 21.9706;
 
     const double sigmaEKS_MC = 46.0933;
@@ -322,6 +317,9 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
         // if (phiwordmc != 1034) continue;
         // nAfterPhiwordmcRowne++;
         
+        //---NEW ENERGY CUT---///
+        double Ecrash = poso[4];
+        if(Ecrash > 650) continue;
 
         //---KOREKCJA SKALI ENERGII---//
         for(int i=0; i<npronti; i++) {
@@ -345,28 +343,25 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
 
         //--- KOREKCJA ENERGII KL CRASH ---//
 
-        double lxy    = sqrt(poso[0]*poso[0] + poso[1]*poso[1]);
-        double Ecrash = poso[4];
+        // double lxy    = sqrt(poso[0]*poso[0] + poso[1]*poso[1]);
 
-        // Czy event jest FAKE?
-        bool fake =
-            (nsel[0] > 0 && Klwordmc != 0 && Klwordmc != 10)
-            || phidec != 2
-            || Kswordmc == 2312;
+        // // Czy event jest FAKE?
+        // bool fake =
+        //     (nsel[0] > 0 && Klwordmc != 0 && Klwordmc != 10)
+        //     || phidec != 2
+        //     || Kswordmc == 2312;
 
-        if (!fake)
-        {
-            // TRUE KL-CRASH
-            if (lxy > 200 && lxy < 226)
-            {
-                int iCrash = (int)(Ecrash - 100.0);
+        // if (!fake)
+        // {
+        //     // TRUE KL-CRASH
+        //     if (lxy > 200 && lxy < 226)
+        //     {
+        //         int iCrash = (int)(Ecrash - 100.0);
 
-                Ecrash *= (1.06 + iCrash * 0.0001);
-            }
-            // else: energia pozostaje bez zmian
-        }
-
-        poso[4] = Ecrash;
+        //         Ecrash *= (1.06 + iCrash * 0.0001);
+        //     }
+        //     // else: energia pozostaje bez zmian
+        // }
 
         //--- CUT NA SKORYGOWANĄ ENERGIĘ ---//
         //if (poso[4] < 150.) continue;
@@ -656,6 +651,10 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
         //---NPRONTI---//
         if(npronti!=4) continue;
         nAfterNprontiData++;
+
+        //---NEW ENERGY CUT---///
+        double Ecrash = poso[4];
+        if(Ecrash > 650) continue;
 
         //if (poso[4] < 150.) continue;
         //nCutData++;

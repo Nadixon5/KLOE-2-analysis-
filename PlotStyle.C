@@ -76,7 +76,7 @@ void DrawMCData(
 // GŁÓWNE MACRO
 void PlotStyle(
     const char *input = "KS_Reconstructed.root",
-    const char *output = "KLOE_analysis_results/POPRAWIONE_ks3pi0_basic_cuts_and_trackveto.pdf")
+    const char *output = "KLOE_analysis_results/ks3pi0_basic_cuts_trackveto_energycut650MeV_v2_no_klcrenergycorr.pdf")
 {
     gROOT->SetBatch(kTRUE);
 
