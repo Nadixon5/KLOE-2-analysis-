@@ -90,6 +90,10 @@ void npronti_check()
 
         if(npronti < 0 || npronti > 10) continue;
 
+        //--- NEW CONDITION ---//
+        double Ecrash = poso[4];
+        if (Ecrash > 650) continue;
+
         //--- ECLTAG ---//
         if(Ecltag == 0) continue;
 
@@ -123,6 +127,10 @@ void npronti_check()
         data.GetEntry(iev);
 
         if(npronti < 0 || npronti > 10) continue;
+
+        //--- NEW CONDITION ---//
+        double Ecrash = poso[4];
+        if (Ecrash > 650) continue;
 
         //--- ECLTAG ---//
         if(Ecltag == 0) continue;
@@ -195,6 +203,6 @@ void npronti_check()
 
     c1->Update();
 
-    c1->Print("KLOE_analysis_results/npronti_TRACKVETO_BASICCUTS.pdf");
+    c1->Print("KLOE_analysis_results/npronti_TRACKVETO_BASICCUTS_ENERGYCUT.pdf");
 
 }
