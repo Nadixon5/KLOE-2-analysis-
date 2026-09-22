@@ -93,23 +93,23 @@ void BetaECrash_npronti()
         hEcrashMC_All[n] =
             new TH1F(Form("hEcrashMC_All_npronti%d",n),
                      Form("MC KL crash energy, npronti = %d;E_{crash} [MeV];Events",n),
-                     100,650,2500);
+                     100,100,650);
 
         hEcrashMC_Veto[n] =
             new TH1F(Form("hEcrashMC_Veto_npronti%d",n),
                      Form("MC KL crash energy after track veto, npronti = %d;E_{crash} [MeV];Events",n),
-                     100,650,2500);
+                     100,100,650);
 
 
         hEcrashData_All[n] =
             new TH1F(Form("hEcrashData_All_npronti%d",n),
                      Form("DATA KL crash energy, npronti = %d;E_{crash} [MeV];Events",n),
-                     100,650,2500);
+                     100,100,650);
 
         hEcrashData_Veto[n] =
             new TH1F(Form("hEcrashData_Veto_npronti%d",n),
                      Form("DATA KL crash energy after track veto, npronti = %d;E_{crash} [MeV];Events",n),
-                     100,650,2500);
+                     100,100,650);
     }
 
     Long64_t nBetaMC   = 0;
@@ -134,7 +134,7 @@ void BetaECrash_npronti()
         if(npronti != 1 && npronti != 2 && npronti != 3 && npronti != 4 && npronti != 5 &&
             npronti != 6 && npronti != 7 && npronti != 8 && npronti!= 9) continue;
 
-        if(Ecrash < 650) continue;
+        if(Ecrash > 650) continue;
 
         PhiCounts[npronti][phiwordmc]++;
 
@@ -179,7 +179,7 @@ void BetaECrash_npronti()
         double Ecrash = poso[4];
 
         // !!! sprawdzenie
-        if(Ecrash < 650) continue;
+        if(Ecrash > 650) continue;
 
         if(npronti < 0 || npronti > 10) continue;
 
@@ -223,7 +223,7 @@ void BetaECrash_npronti()
         double Ecrash = poso[4];
 
         // !!! sprawdzenie
-        if(Ecrash < 650) continue;
+        if(Ecrash > 650) continue;
 
         if(npronti < 0 || npronti > 10) continue;
 
@@ -295,7 +295,7 @@ void BetaECrash_npronti()
 
     TCanvas *c = new TCanvas("c", "c", 900, 700);
 
-    TString pdf = "KLOE_analysis_results/Beta_Ecrash_vs_npronti_BIGENERGY.pdf";
+    TString pdf = "KLOE_analysis_results/Beta_Ecrash_vs_npronti_SMALLENERGY.pdf";
 
     c->Print(pdf + "[");
 
@@ -326,29 +326,28 @@ void BetaECrash_npronti()
         hEcrashMC_All[n]->SetMinimum(0);
         hBetaData_All[n]->SetMinimum(0);
 
+        if(n == 1)
+        {
+            hBetaData_All[n]->Draw("E1");
+            hBetaData_Veto[n]->Draw("E1 SAME");
 
-        // if(n == 1)
-        // {
-        //     hBetaData_All[n]->Draw("E1");
-        //     hBetaData_Veto[n]->Draw("E1 SAME");
+            hBetaMC_All[n]->Draw("HIST SAME");
+            hBetaMC_Veto[n]->Draw("HIST SAME");
+        }
+        else
+        {
+            hBetaMC_All[n]->Draw("HIST");
+            hBetaMC_Veto[n]->Draw("HIST SAME");
 
-        //     hBetaMC_All[n]->Draw("HIST SAME");
-        //     hBetaMC_Veto[n]->Draw("HIST SAME");
-        // }
-        // else
-        // {
-        //     hBetaMC_All[n]->Draw("HIST");
-        //     hBetaMC_Veto[n]->Draw("HIST SAME");
+            hBetaData_All[n]->Draw("E1 SAME");
+            hBetaData_Veto[n]->Draw("E1 SAME");
+        }
 
-        //     hBetaData_All[n]->Draw("E1 SAME");
-        //     hBetaData_Veto[n]->Draw("E1 SAME");
-        // }
+        // hBetaMC_All[n]->Draw("HIST");
+        // hBetaMC_Veto[n]->Draw("HIST SAME");
 
-        hBetaMC_All[n]->Draw("HIST");
-        hBetaMC_Veto[n]->Draw("HIST SAME");
-
-        hBetaData_All[n]->Draw("E1 SAME");
-        hBetaData_Veto[n]->Draw("E1 SAME");
+        // hBetaData_All[n]->Draw("E1 SAME");
+        // hBetaData_Veto[n]->Draw("E1 SAME");
 
         TLegend *leg = new TLegend(0.65,0.68,0.88,0.88);
 
