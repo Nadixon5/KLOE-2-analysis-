@@ -15,6 +15,7 @@ void ecl_check()
     Char_t npronti;
     Int_t ncl;
     Int_t flagcl[100];
+    Int_t pnum1[100];
 
     Float_t poso[5];
     UInt_t filfowd;
@@ -27,6 +28,7 @@ void ecl_check()
     mc.SetBranchAddress("npronti", &npronti);
     mc.SetBranchAddress("ncl", &ncl);
     mc.SetBranchAddress("flagcl", flagcl);
+    mc.SetBranchAddress("pnum1", pnum1);
 
     mc.SetBranchAddress("poso", poso);
     mc.SetBranchAddress("Ecltag", &Ecltag);
@@ -88,7 +90,10 @@ void ecl_check()
         for (int i = 0; i < ncl; i++)
         {
             // --- FLAGCL ---
-            if (flagcl[i] != 5) continue;
+            // if (flagcl[i] != 5) continue;
+
+            // --- PNUM1 ---
+            if (pnum1[i] != 0) continue;
 
             hECL[npronti]->Fill(ecl[i]);
         }
@@ -132,7 +137,7 @@ void ecl_check()
 
     out->Close();
 
-    TString pdf = "KLOE_analysis_results/mc_ecl_check_flagcl5.pdf";
+    TString pdf = "KLOE_analysis_results/mc_ecl_check_pnum1_0.pdf";
 
     TCanvas *c = new TCanvas("c", "c", 900, 700);
 
