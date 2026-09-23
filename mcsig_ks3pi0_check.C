@@ -40,15 +40,25 @@ void mcsig_ks3pi0_check()
                      100,100,2800);
     }
 
+    TH1F *h1EcrashMCsig_All =
+    new TH1F("h1EcrashMCsig_All","npronti;N_{prompt};Events",11, -0.5, 10.5);
+
+    TH1F *h1EcrashMCsig_Veto =
+    new TH1F("h1EcrashMCsig_Veto","npronti;N_{prompt};Events",11, -0.5, 10.5);
+
     Long64_t Nmcsig = mcsig.GetEntries();
+    Long64_t nCut = 0;
+    Long64_t nCutV = 0;
 
     for(Long64_t ie=0; ie<Nmcsig; ie++)
     {
         mcsig.GetEntry(ie);
 
-        double Ecrash = poso[4];
+        if(npronti != 6) continue;
 
-        if(npronti < 0 || npronti > 8) continue;
+        //--- NEW CONDITION ---//
+        double Ecrash = poso[4];
+        if (Ecrash > 650) continue;
 
         if(Kswordmc != 460551) continue;
 
@@ -65,13 +75,22 @@ void mcsig_ks3pi0_check()
         if(vetocos>0) continue;
 
         hEcrashMCsig_All[npronti]->Fill(Ecrash);
+        h1EcrashMCsig_All->Fill(npronti);
+        nCut++;
 
         //---TRACK VETO---//
         if(nsel[0] > 0) continue;
 
         hEcrashMCsig_Veto[npronti]->Fill(Ecrash);
+        h1EcrashMCsig_Veto->Fill(npronti);
+        nCutV++;
 
     }
+
+    cout << endl;
+    cout << "Total events           = " << Nmcsig << endl;
+    cout << "After energy cut       = " << nCut << endl;
+    cout << "After energy cut +veto = " << nCutV << endl;
 
     TFile *out = new TFile("KLOE_analysis_results/mcsig_energy_check.root","RECREATE");
 
@@ -124,5 +143,29 @@ void mcsig_ks3pi0_check()
 
     delete c;
 
+    TCanvas *c1 = new TCanvas("c1","",900,700);
+
+    h1EcrashMCsig_All->SetLineColor(kBlue);
+    h1EcrashMCsig_All->SetLineWidth(2);
+
+    h1EcrashMCsig_Veto->SetLineColor(kBlue+1);
+    h1EcrashMCsig_Veto->SetLineStyle(2);
+    h1EcrashMCsig_Veto->SetLineWidth(2);
+
+    h1EcrashMCsig_All->Draw("HIST");
+    h1EcrashMCsig_Veto->Draw("HIST SAME");
+
+    TLegend *legN = new TLegend(0.6,0.65,0.88,0.88);
+
+    legN->SetTextSize(0.02);
+
+    legN->AddEntry(h1EcrashMCsig_All,"MC sig all","l");
+    legN->AddEntry(h1EcrashMCsig_Veto,"MC sig all after veto","l");
+
+    legN->Draw();
+
+    c1->Update();
+
+    c1->Print("KLOE_analysis_results/mcsig_npronti_6.pdf");
 
 }

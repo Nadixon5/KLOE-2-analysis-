@@ -273,13 +273,6 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
 
         //-----------! WARUNKI !-----------//
 
-        //---Track veto---//
-        // if(nsel[2] > 0) continue;
-        // nAfterTrackVetoMC++;
-
-        //---NOWE TRACK VETO JEZUS MARIA---//
-        if(nsel[0] > 0) continue;
-
         //---ECLTAG---//
         if(Ecltag == 0) continue;
         nAfterECLMC++;
@@ -362,6 +355,11 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
         //     }
         //     // else: energia pozostaje bez zmian
         // }
+
+        // poso[4] = Ecrash;
+
+        //---NOWE TRACK VETO JEZUS MARIA---//
+        if(nsel[0] > 0) continue;
 
         //--- CUT NA SKORYGOWANĄ ENERGIĘ ---//
         //if (poso[4] < 150.) continue;
@@ -624,10 +622,6 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
         hNprontiData->Fill(npronti,wData);
 
         nAllEventsData++;
-
-        //---Track veto---//
-        // if(nsel[2] > 0) continue;
-        // nAfterTrackVetoData++;
 
         //---NOWE TRACK VETO JEZUS MARIA---//
         if(nsel[0] > 0) continue;
