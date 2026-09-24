@@ -20,6 +20,11 @@ void npronti_check()
     UShort_t Ecltag;
     Int_t vetocos;
     Int_t Crflag;
+    Int_t pnum1[100];
+    Int_t pnum2[100];
+    Int_t pnum3[100];
+    Int_t ncl;
+    Int_t speng[10];
 
     TChain mc("KS_3PI0/h1");
     mc.Add("/home/nadusia/Documents/KLOE-2_analysis/mc/*.root");
@@ -37,6 +42,11 @@ void npronti_check()
     mc.SetBranchAddress("Crflag",&Crflag);
     mc.SetBranchAddress("filfowd", &filfowd);
     mc.SetBranchAddress("Ecltag", &Ecltag);
+    mc.SetBranchAddress("pnum1", pnum1);
+    mc.SetBranchAddress("pnum2", pnum2);
+    mc.SetBranchAddress("pnum3", pnum3);
+    mc.SetBranchAddress("ncl", &ncl);
+    mc.SetBranchAddress("speng", speng);
 
     data.SetBranchAddress("npronti", &npronti);
     data.SetBranchAddress("nsel", nsel);
@@ -65,24 +75,40 @@ void npronti_check()
     TH1F *hnprontiDataveto =
     new TH1F("hnprontiDataveto","npronti;N_{prompt};Events",11, -0.5, 10.5);
 
-    Long64_t nprontiCount[11] = {0};
+    TH1F *hnprontiMCPnum1Corrected =
+    new TH1F("hnprontiMCPnum1Corrected","npronti corrected for pnum1;N_{prompt};Events",11, -0.5, 10.5);
+
+
+    //Long64_t nprontiCount[11] = {0};
     Long64_t Nmc = mc.GetEntries();
     Long64_t Ndata = data.GetEntries();
+    Long64_t accidentalCount[11][11] = {};
 
-    for(Long64_t iev = 0; iev < Ndata; iev++)
-    {
-        data.GetEntry(iev);
+    // for(Long64_t iev = 0; iev < Nmc; iev++)
+    // {
+    //     mc.GetEntry(iev);
 
-        if(npronti >= 0 && npronti <= 10)
-            nprontiCount[(int)npronti]++;
-    }
+    //     if(Ecltag == 0) continue;
 
-    for(int i = 0; i <= 10; i++)
-    {
-        cout << "npronti = " << i
-            << " : " << nprontiCount[i]
-            << endl;
-    }
+    //     //--- FILFOWD ---//
+    //     if((filfowd & (1 << 20)) == 0) continue;
+
+    //     //--- CRFLAG ---//
+    //     if(Crflag <= 0) continue;
+
+    //     //--- VETOCOS ---//
+    //     if(vetocos > 0) continue;
+
+    //     if(npronti >= 0 && npronti <= 10)
+    //         nprontiCount[(int)npronti]++;
+    // }
+
+    // for(int i = 0; i <= 10; i++)
+    // {
+    //     cout << "npronti = " << i
+    //         << " : " << nprontiCount[i]
+    //         << endl;
+    // }
 
     for(Long64_t iev = 0; iev < Nmc; iev++)
     {
@@ -92,7 +118,7 @@ void npronti_check()
 
         //--- NEW CONDITION ---//
         double Ecrash = poso[4];
-        if (Ecrash > 650) continue;
+        //if (Ecrash > 650) continue;
 
         //--- ECLTAG ---//
         if(Ecltag == 0) continue;
@@ -108,19 +134,67 @@ void npronti_check()
 
         hnprontiMCAll->Fill(npronti);
 
-        if(Kswordmc == 1799)
-            hnprontiMCKs->Fill(npronti);
+        int nAccidental = 0;
 
-        //--- Track veto + dodatkowe warunki ---//
+        for(int j = 0; j < npronti; j++)
+        {
+            int cluster = speng[j];
+
+            if(pnum1[cluster] == 0 && pnum2[cluster] == 0 && pnum3[cluster] == 0)
+                nAccidental++;
+        }
+
+        accidentalCount[(int)npronti][nAccidental]++;
+
+        int nprontiCorrected = npronti - nAccidental;
+
+        hnprontiMCPnum1Corrected->Fill(nprontiCorrected);
+
+        //--- Track veto ---//
         if(nsel[0] > 0) continue;
-        //if(poso[4] < 150.) continue;
-        //if(beta < 0.2 || beta > 0.225) continue;
 
         hnprontiMCAllveto->Fill(npronti);
 
-        if(Kswordmc == 1799)
-            hnprontiMCKsveto->Fill(npronti);
+        // if (Kswordmc == 1799)
+        //     hnprontiMCKsveto->Fill(npronti);
     }
+
+    // cout << endl;
+    // cout << "============================================================" << endl;
+    // cout << "        ACCIDENTAL CLUSTERS FOR EACH NPRONTI" << endl;
+    // cout << "============================================================" << endl;
+
+    // cout << "npronti"
+    //     << "\t0"
+    //     << "\t1"
+    //     << "\t2"
+    //     << "\t3"
+    //     << "\t4"
+    //     << "\t5"
+    //     << "\t6"
+    //     << "\t7"
+    //     << "\t8"
+    //     << "\t9"
+    //     << "\t10"
+    //     << "\tSUM"
+    //     << endl;
+
+    // cout << "------------------------------------------------------------" << endl;
+
+    // for(int n = 1; n <= 10; n++)
+    // {
+    //     Long64_t sum = 0;
+    //     cout << n;
+
+    //     for(int a = 0; a <= 10; a++)
+    //     {
+    //         cout << "\t" << accidentalCount[n][a];
+    //         sum += accidentalCount[n][a];
+    //     }
+
+    //     cout << "\t" << sum << endl;
+    // }
+    // cout << "============================================================" << endl;
 
     for(Long64_t iev = 0; iev < Ndata; iev++)
     {
@@ -146,10 +220,8 @@ void npronti_check()
 
         hnprontiData->Fill(npronti);
 
-        //--- Track veto + dodatkowe warunki ---//
+        //--- Track veto ---//
         if(nsel[0] > 0) continue;
-        //if(poso[4] < 150.) continue;
-        //if(beta < 0.2 || beta > 0.225) continue;
 
         hnprontiDataveto->Fill(npronti);
     }
@@ -162,13 +234,16 @@ void npronti_check()
     hnprontiMCAllveto->SetLineColor(kBlue+1);
     hnprontiMCAllveto->SetLineStyle(2);
     hnprontiMCAllveto->SetLineWidth(2);
+    
+    // hnprontiMCKs->SetLineColor(kRed);
+    // hnprontiMCKs->SetLineWidth(2);
+    // hnprontiMCKsveto->SetLineColor(kRed+1);
+    // hnprontiMCKsveto->SetLineStyle(2);
+    // hnprontiMCKsveto->SetLineWidth(2);
 
-    hnprontiMCKs->SetLineColor(kRed);
-    hnprontiMCKs->SetLineWidth(2);
-
-    hnprontiMCKsveto->SetLineColor(kRed+1);
-    hnprontiMCKsveto->SetLineStyle(2);
-    hnprontiMCKsveto->SetLineWidth(2);
+    hnprontiMCPnum1Corrected->SetLineColor(kRed);
+    hnprontiMCPnum1Corrected->SetLineWidth(3);
+    hnprontiMCPnum1Corrected->SetLineStyle(2);
 
     hnprontiData->SetMarkerStyle(20);
     hnprontiData->SetMarkerSize(0.7);
@@ -182,11 +257,11 @@ void npronti_check()
 
     hnprontiMCAll->Draw("HIST");
     hnprontiMCAllveto->Draw("HIST SAME");
-    hnprontiMCKs->Draw("HIST SAME");
-    hnprontiMCKsveto->Draw("HIST SAME");
+    hnprontiMCPnum1Corrected->Draw("HIST SAME");
+    // hnprontiMCKs->Draw("HIST SAME");
+    // hnprontiMCKsveto->Draw("HIST SAME");
     hnprontiData->Draw("E1 SAME");
     hnprontiDataveto->Draw("E1 SAME");
-
 
     TLegend *legN = new TLegend(0.6,0.65,0.88,0.88);
 
@@ -194,8 +269,9 @@ void npronti_check()
 
     legN->AddEntry(hnprontiMCAll,"MC all","l");
     legN->AddEntry(hnprontiMCAllveto,"MC all after veto","l");
-    legN->AddEntry(hnprontiMCKs,"MC: K_{S} #rightarrow 2#pi^{0}","l");
-    legN->AddEntry(hnprontiMCKsveto,"MC: K_{S} #rightarrow 2#pi^{0} after veto","l");
+    legN->AddEntry(hnprontiMCPnum1Corrected,"MC corrected for accidentals", "l");
+    // legN->AddEntry(hnprontiMCKs,"MC: K_{S} #rightarrow 2#pi^{0}","l");
+    // legN->AddEntry(hnprontiMCKsveto,"MC: K_{S} #rightarrow 2#pi^{0} after veto","l");
     legN->AddEntry(hnprontiData,"DATA","lep");
     legN->AddEntry(hnprontiDataveto,"DATA after veto","lep");
 
@@ -203,6 +279,6 @@ void npronti_check()
 
     c1->Update();
 
-    c1->Print("KLOE_analysis_results/npronti_TRACKVETO_BASICCUTS_ENERGYCUT.pdf");
+    c1->Print("KLOE_analysis_results/npronti_TRACKVETO_BASICCUTS_accidentals.pdf");
 
 }

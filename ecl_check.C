@@ -16,6 +16,8 @@ void ecl_check()
     Int_t ncl;
     Int_t flagcl[100];
     Int_t pnum1[100];
+    Int_t pnum2[100];
+    Int_t pnum3[100];
 
     Float_t poso[5];
     UInt_t filfowd;
@@ -29,6 +31,8 @@ void ecl_check()
     mc.SetBranchAddress("ncl", &ncl);
     mc.SetBranchAddress("flagcl", flagcl);
     mc.SetBranchAddress("pnum1", pnum1);
+    mc.SetBranchAddress("pnum2", pnum2);
+    mc.SetBranchAddress("pnum3", pnum3);
 
     mc.SetBranchAddress("poso", poso);
     mc.SetBranchAddress("Ecltag", &Ecltag);
@@ -50,6 +54,7 @@ void ecl_check()
 
     TH1F *hECL[9];
     TH1F *hECLd[9];
+    TH1F *hECLpo[9];
 
     for (int n = 1; n <= 8; n++)
     {
@@ -60,6 +65,11 @@ void ecl_check()
         );
         hECLd[n] = new TH1F(
             Form("hECLd%d", n),
+            Form("Cluster energy, npronti = %d;E_{cl} [MeV];Events", n),
+            100, 100, 2700
+        );
+        hECLpo[n] = new TH1F(
+            Form("hECLpo%d", n),
             Form("Cluster energy, npronti = %d;E_{cl} [MeV];Events", n),
             100, 100, 2700
         );
@@ -93,11 +103,15 @@ void ecl_check()
             // if (flagcl[i] != 5) continue;
 
             // --- PNUM1 ---
-            if (pnum1[i] != 0) continue;
-
-            hECL[npronti]->Fill(ecl[i]);
+            if (pnum1[i] == 0 && pnum2[i] == 0 && pnum3[i] == 0){
+                hECL[npronti]->Fill(ecl[i]);
+            }
+            else
+            hECLpo[npronti]->Fill(ecl[i]);
         }
     }
+
+    
 
     for (Long64_t iev = 0; iev < Ndata; iev++)
     {
@@ -132,12 +146,13 @@ void ecl_check()
     for (int n = 1; n <= 8; n++)
     {
         hECL[n]->Write();
+        hECLpo[n]->Write();
         hECLd[n]->Write();
     }
 
     out->Close();
 
-    TString pdf = "KLOE_analysis_results/mc_ecl_check_pnum1_0.pdf";
+    TString pdf = "KLOE_analysis_results/mc_ecl_check_pnum1_pnum2_pnum3_NEW.pdf";
 
     TCanvas *c = new TCanvas("c", "c", 900, 700);
 
@@ -151,6 +166,10 @@ void ecl_check()
         hECL[n]->SetLineWidth(2);
         hECL[n]->SetStats(0);
 
+        hECLpo[n]->SetLineColor(kRed+1);
+        hECLpo[n]->SetLineStyle(2);
+        hECLpo[n]->SetLineWidth(2);
+
         hECLd[n]->SetMarkerStyle(20);
         hECLd[n]->SetMarkerSize(0.7);
         hECLd[n]->SetMarkerColor(kBlack);
@@ -158,11 +177,23 @@ void ecl_check()
 
         hECLd[n]->Draw("E1");
         hECL[n]->Draw("HIST SAME");
+        hECLpo[n]->Draw("HIST SAME");
+
+        TLegend *leg = new TLegend(0.55,0.68,0.88,0.88);
+
+        leg->AddEntry(hECL[n],"MC pnum1, pnum2, pnum3 = 0","l");
+        leg->AddEntry(hECLpo[n],"MC pnum1, pnum2, pnum3 /= 0","l");
+        leg->AddEntry(hECLd[n],"Data","lep");
+        leg->SetTextSize(0.03);
+        leg->SetBorderSize(0);
+        leg->Draw();
 
         c->Modified();
         c->Update();
 
         c->Print(pdf);
+
+        delete leg;
 
     }
     c->Print(pdf + "]");
