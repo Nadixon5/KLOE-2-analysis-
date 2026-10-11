@@ -4,11 +4,15 @@
 #include "TH1F.h"
 #include "TLegend.h"
 #include <map>
+#include "TRandom3.h"
 
 void npronti_check()
 {
     gSystem->Load("libPhysics");
     gStyle->SetOptStat(0);
+
+    double accidentalProbability = 0.50;
+    TRandom3 rand(0);
 
     Char_t npronti;
     UInt_t Kswordmc;
@@ -134,14 +138,21 @@ void npronti_check()
 
         hnprontiMCAll->Fill(npronti);
 
+        // if (Kswordmc == 1799)
+        //     hnprontiMCKs->Fill(npronti);
+
+        //--- ACCIDENTALS ---//
+
         int nAccidental = 0;
 
         for(int j = 0; j < npronti; j++)
         {
             int cluster = speng[j];
 
-            if(pnum1[cluster] == 0 && pnum2[cluster] == 0 && pnum3[cluster] == 0)
-                nAccidental++;
+            if(pnum1[cluster] == 0 && pnum2[cluster] == 0 && pnum3[cluster] == 0){
+                
+                if(rand.Rndm() < accidentalProbability) nAccidental++;
+            }
         }
 
         accidentalCount[(int)npronti][nAccidental]++;
@@ -204,7 +215,7 @@ void npronti_check()
 
         //--- NEW CONDITION ---//
         double Ecrash = poso[4];
-        if (Ecrash > 650) continue;
+        //if (Ecrash > 650) continue;
 
         //--- ECLTAG ---//
         if(Ecltag == 0) continue;
@@ -279,6 +290,6 @@ void npronti_check()
 
     c1->Update();
 
-    c1->Print("KLOE_analysis_results/npronti_TRACKVETO_BASICCUTS_accidentals.pdf");
+    c1->Print("KLOE_analysis_results/npronti_name.pdf");
 
 }

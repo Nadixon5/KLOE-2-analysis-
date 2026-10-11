@@ -54,7 +54,7 @@ void mcsig_ks3pi0_check()
     {
         mcsig.GetEntry(ie);
 
-        if(npronti != 6) continue;
+        //if(npronti != 6) continue;
 
         //--- NEW CONDITION ---//
         double Ecrash = poso[4];
@@ -87,10 +87,10 @@ void mcsig_ks3pi0_check()
 
     }
 
-    cout << endl;
-    cout << "Total events           = " << Nmcsig << endl;
-    cout << "After energy cut       = " << nCut << endl;
-    cout << "After energy cut +veto = " << nCutV << endl;
+    // cout << endl;
+    // cout << "Total events           = " << Nmcsig << endl;
+    // cout << "After energy cut       = " << nCut << endl;
+    // cout << "After energy cut +veto = " << nCutV << endl;
 
     TFile *out = new TFile("KLOE_analysis_results/mcsig_energy_check.root","RECREATE");
 
@@ -123,7 +123,7 @@ void mcsig_ks3pi0_check()
         hEcrashMCsig_All[n]->Draw("HIST");
         hEcrashMCsig_Veto[n]->Draw("HIST SAME");
 
-        TLegend *leg = new TLegend(0.65,0.68,0.88,0.88);
+        TLegend *leg = new TLegend(0.6,0.65,0.88,0.88);
 
         leg->AddEntry(hEcrashMCsig_All[n],"MC sig","l");
         leg->AddEntry(hEcrashMCsig_Veto[n],"MC sig after track veto","l");
@@ -155,7 +155,7 @@ void mcsig_ks3pi0_check()
     h1EcrashMCsig_All->Draw("HIST");
     h1EcrashMCsig_Veto->Draw("HIST SAME");
 
-    TLegend *legN = new TLegend(0.6,0.65,0.88,0.88);
+    TLegend *legN = new TLegend(0.69,0.73,0.88,0.88);
 
     legN->SetTextSize(0.02);
 
@@ -166,6 +166,6 @@ void mcsig_ks3pi0_check()
 
     c1->Update();
 
-    c1->Print("KLOE_analysis_results/mcsig_npronti_6.pdf");
+    c1->Print("KLOE_analysis_results/mcsig_npronti_ECUT_New.pdf");
 
 }
