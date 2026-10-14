@@ -48,17 +48,14 @@ void mcsig_ks3pi0_check()
 
     Long64_t Nmcsig = mcsig.GetEntries();
     Long64_t nCut = 0;
+    Long64_t nNew = 0;
     Long64_t nCutV = 0;
 
     for(Long64_t ie=0; ie<Nmcsig; ie++)
     {
         mcsig.GetEntry(ie);
 
-        //if(npronti != 6) continue;
-
-        //--- NEW CONDITION ---//
-        double Ecrash = poso[4];
-        if (Ecrash > 650) continue;
+        // if(npronti != 6) continue;
 
         if(Kswordmc != 460551) continue;
 
@@ -78,6 +75,11 @@ void mcsig_ks3pi0_check()
         h1EcrashMCsig_All->Fill(npronti);
         nCut++;
 
+        //--- NEW CONDITION ---//
+        double Ecrash = poso[4];
+        if (Ecrash > 650) continue;
+        nNew++;
+
         //---TRACK VETO---//
         if(nsel[0] > 0) continue;
 
@@ -87,10 +89,11 @@ void mcsig_ks3pi0_check()
 
     }
 
-    // cout << endl;
-    // cout << "Total events           = " << Nmcsig << endl;
-    // cout << "After energy cut       = " << nCut << endl;
-    // cout << "After energy cut +veto = " << nCutV << endl;
+    cout << endl;
+    cout << "Total events           = " << Nmcsig << endl;
+    cout << "After basic cuts       = " << nCut << endl;
+    cout << "After energy cut       = " << nNew << endl;
+    cout << "After energy cut +veto = " << nCutV << endl;
 
     TFile *out = new TFile("KLOE_analysis_results/mcsig_energy_check.root","RECREATE");
 

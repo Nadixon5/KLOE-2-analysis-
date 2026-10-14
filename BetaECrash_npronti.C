@@ -124,7 +124,7 @@ void BetaECrash_npronti()
     Long64_t nMC = mc.GetEntries();
     Long64_t nData = data.GetEntries();
 
-    // Wypisanie phiwordmc dla energii większej od 900 MeV
+    // Wypisanie phiwordmc dla energii większej od 650 MeV
     for(Long64_t iev = 0; iev < nMC; iev++)
     {
         mc.GetEntry(iev);
@@ -134,7 +134,7 @@ void BetaECrash_npronti()
         if(npronti != 1 && npronti != 2 && npronti != 3 && npronti != 4 && npronti != 5 &&
             npronti != 6 && npronti != 7 && npronti != 8 && npronti!= 9) continue;
 
-        if(Ecrash > 650) continue;
+        if(Ecrash < 650) continue;
 
         PhiCounts[npronti][phiwordmc]++;
 
@@ -326,7 +326,7 @@ void BetaECrash_npronti()
         hEcrashMC_All[n]->SetMinimum(0);
         hBetaData_All[n]->SetMinimum(0);
 
-        if(n == 1)
+        if(n == 1 || n == 7)
         {
             hBetaData_All[n]->Draw("E1");
             hBetaData_Veto[n]->Draw("E1 SAME");
