@@ -1,13 +1,3 @@
-#include <iostream>
-#include "TFile.h"
-#include "TH1F.h"
-#include "TF1.h"
-#include "TH2D.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include "TStyle.h"
-#include "TROOT.h"
-
 using namespace std;
 
 void SetMCStyle(TH1 *h)
@@ -30,43 +20,15 @@ void SetDataStyle(TH1 *h)
     h->SetStats(0);
 }
 
-void DrawMCData(
-    TH1 *hMC,
-    TH1 *hData,
-    // TH1 *hData,
-    // TH1 *hMC,
-    TCanvas *c,
-    const char *pdf,
-    bool normalizeMC = false) //ture i false dotyczą normalizacji!!!!!!!!!
+void DrawMCData(TH1 *hMC,TH1 *hData,TCanvas *c,const char *pdf, bool normalizeMC = false)
 {
-    if(!hMC || !hData)
-    {
-        cout << "ERROR: missing histogram!" << endl;
-        return;
-    }
-
-    //SetDataStyle(hData);
     SetMCStyle(hMC);
     SetDataStyle(hData);
-
-    //----------------------------------------------------------
-    // Opcjonalna normalizacja MC do liczby zdarzeń DATA
-    //----------------------------------------------------------
-
-    // if(normalizeMC)
-    // {
-    //     double intMC   = hMC->Integral();
-    //     double intData = hData->Integral();
-    //     if(intMC > 0)
-    //         hMC->Scale(intData/intMC);
-    // }
 
     c->Clear();
 
     hMC->Draw("hist");
     hData->Draw("E1 SAME");
-    // hData->Draw("hist");
-    // hMC->Draw("E1 SAME");
 
     c->Modified();
     c->Update();
@@ -76,7 +38,7 @@ void DrawMCData(
 // GŁÓWNE MACRO
 void PlotStyle(
     const char *input = "KS_Reconstructed.root",
-    const char *output = "KLOE_analysis_results/ks3pi0_basic_cuts_trackveto_energycut650MeV_v2_no_klcrenergycorr.pdf")
+    const char *output = "KLOE_analysis_results/ks3pi0_basic_cuts_trackveto_energycut650MeV_ACCIDENTALS_bezinnych.pdf")
 {
     gROOT->SetBatch(kTRUE);
 

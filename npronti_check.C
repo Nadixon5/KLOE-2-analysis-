@@ -122,7 +122,7 @@ void npronti_check()
 
         //--- NEW CONDITION ---//
         double Ecrash = poso[4];
-        //if (Ecrash > 650) continue;
+        if (Ecrash > 650) continue;
 
         //--- ECLTAG ---//
         if(Ecltag == 0) continue;
@@ -215,7 +215,7 @@ void npronti_check()
 
         //--- NEW CONDITION ---//
         double Ecrash = poso[4];
-        //if (Ecrash > 650) continue;
+        if (Ecrash > 650) continue;
 
         //--- ECLTAG ---//
         if(Ecltag == 0) continue;
@@ -290,6 +290,6 @@ void npronti_check()
 
     c1->Update();
 
-    c1->Print("KLOE_analysis_results/npronti_name.pdf");
+    c1->Print("KLOE_analysis_results/npronti_energycut_ON.pdf");
 
 }
