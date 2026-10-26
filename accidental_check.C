@@ -4,7 +4,6 @@ void SetMCStyle(TH1 *h) {
     if (!h) return;
     h->SetLineColor(kRed + 1);
     h->SetLineWidth(2);
-    h->SetStats(0);
 }
 
 void SetDataStyle(TH1 *h) {
@@ -13,30 +12,111 @@ void SetDataStyle(TH1 *h) {
     h->SetMarkerSize(0.7);
     h->SetLineColor(kBlack);
     h->SetMarkerColor(kBlack);
-    h->SetStats(0);
 }
 
-void DrawMCData(TH1 *mc, TH1 *data, TCanvas *c, const char *pdf) {
-    if (!mc || !data) return;
+void DrawMCData(TH1 *mc, TH1 *mcacc0, TH1 *acc1, TH1 *acc2,
+                TH1 *data, TCanvas *c, const char *pdf) {
+    if (!mc || !mcacc0 || !acc1 || !acc2 || !data || !c) return;
 
     SetMCStyle(mc);
     SetDataStyle(data);
 
+    mcacc0->SetLineColor(kOrange +7);
+    mcacc0->SetLineWidth(2);
+    mcacc0->SetLineStyle(9);
+
+    acc1->SetLineColor(kAzure +2);
+    acc1->SetLineWidth(2);
+    acc1->SetLineStyle(2);
+
+    acc2->SetLineColor(kSpring -7);
+    acc2->SetLineWidth(2);
+    acc2->SetLineStyle(4);
+
+    mc->SetStats(0);
+    mcacc0->SetStats(0);
+    acc1->SetStats(0);
+    acc2->SetStats(0);
+    data->SetStats(0);
+
     c->Clear();
-    data->Draw("E1");
-    mc->Draw("HIST SAME");
-    // mc->Draw("HIST");
-    // data->Draw("E1 SAME");
+
+    // double ymax = max(
+    //     max(mc->GetMaximum(), acc1->GetMaximum()),
+    //     max(acc2->GetMaximum(), data->GetMaximum())
+    // );
+
+    // mc->SetMaximum(ymax * 1.25);
+
+    mc->Draw("HIST");
+    mcacc0->Draw("HIST SAME");
+    acc1->Draw("HIST SAME");
+    acc2->Draw("HIST SAME");
+    data->Draw("E1 SAME");
+
+    TLegend *leg = new TLegend(0.59, 0.67, 0.89, 0.89);
+    leg->AddEntry(mc, "MC: All events", "l");
+    leg->AddEntry(mcacc0, "MC: zero accidentals", "l");
+    leg->AddEntry(acc1, "MC: exactly 1 accidental", "l");
+    leg->AddEntry(acc2, "MC: exactly 2 accidentals", "l");
+    leg->AddEntry(data, "Data", "lep");
+    leg->Draw();
 
     c->Modified();
     c->Update();
     c->Print(pdf);
+
+    delete leg;
+}
+
+void DrawStackData(TH1 *mc1, TH1 *mc2,TH1 *data, TCanvas *c, const char *pdf, const char *title)
+{
+    if (!mc1 || !mc2 || !data || !c) return;
+
+    mc1->SetFillColor(kBlue -9);
+    mc1->SetLineColor(kBlue -6);
+
+    mc2->SetFillColor(kMagenta +1);
+    mc2->SetLineColor(kMagenta +3);
+
+    data->SetMarkerStyle(20);
+    data->SetMarkerSize(0.7);
+    data->SetMarkerColor(kBlack);
+    data->SetLineColor(kBlack);
+
+    mc1->SetStats(0);
+    mc2->SetStats(0);
+    data->SetStats(0);
+
+    THStack *hs = new THStack("hs_stack", title);
+
+    hs->Add(mc1);
+    hs->Add(mc2);
+
+    c->Clear();
+
+    hs->Draw("HIST");
+    hs->GetXaxis()->SetTitle(mc1->GetXaxis()->GetTitle());
+    hs->GetYaxis()->SetTitle("Events");
+    data->Draw("E1 SAME");
+
+    TLegend *leg = new TLegend(0.67, 0.77, 0.89, 0.89);
+    leg->AddEntry(mc1, "MC: 1 accidental", "f");
+    leg->AddEntry(mc2, "MC: 2 accidentals", "f");
+    leg->AddEntry(data, "Data", "lep");
+    leg->Draw();
+
+    c->Modified();
+    c->Update();
+    c->Print(pdf);
+
+    delete leg;
+    delete hs;
 }
 
 void accidental_check(const char *output = "accidental_check.root"){
 
     gSystem->Load("libPhysics");
-    gStyle->SetOptStat(0);
 
     const double wMC = 1.0 * 400;
     const double wData = 1.0 * 400;
@@ -92,70 +172,77 @@ void accidental_check(const char *output = "accidental_check.root"){
 
     TFile fout(output, "RECREATE");
 
-    // Energia klastra dla niskiej i wysokiej energii crashu KL
-    TH1F *hClusterELowPnum0 =
-    new TH1F("hClusterELowPnum0","E_{crash}<650 MeV;E_{cluster} [MeV];Clusters",120, 0, 700);
-
-    TH1F *hClusterELowPnumNonZero =
-    new TH1F("hClusterELowPnumNonZero","E_{crash}<650 MeV;E_{cluster} [MeV];Clusters",120, 0, 700);
-
-    TH1F *hClusterEHighPnum0 =
-    new TH1F("hClusterEHighPnum0","E_{crash}>650 MeV;E_{cluster} [MeV];Clusters",120, 0, 700);
-
-    TH1F *hClusterEHighPnumNonZero =
-    new TH1F("hClusterEHighPnumNonZero","E_{crash}>650 MeV;E_{cluster} [MeV];Clusters",120, 0, 700);
-
-    // Ile klastrów z pnum1=0 przypada na jedno zdarzenie 4-gamma?
-    TH1F *hNAccCandidatesLow =
-    new TH1F("hNAccCandidatesLow","E_{crash}<650 MeV;N_{clusters} with pnum1=0;Events",5, 0, 5);
-
-    TH1F *hNAccCandidatesHigh =
-    new TH1F("hNAccCandidatesHigh","E_{crash}>650 MeV;N_{clusters} with pnum1=0;Events",5, 0, 5);
-
-    // Pozostałe histogramy
     TH1F *hDeltaPxMC =
     new TH1F("hDeltaPxMC","Delta P_{x};#Delta P_{x} [MeV/c];Events",200,-300,300);
-
     TH1F *hDeltaPyMC =
     new TH1F("hDeltaPyMC","Delta P_{y};#Delta P_{y} [MeV/c];Events",200,-300,300);
-
     TH1F *hDeltaPzMC =
     new TH1F("hDeltaPzMC","Delta P_{z};#Delta P_{z} [MeV/c];Events",200,-300,300);
 
     TH1F *hDeltaPxData =
     new TH1F("hDeltaPxData","Delta P_{x};#Delta P_{x} [MeV/c];Events",200,-300,300);
-
     TH1F *hDeltaPyData =
     new TH1F("hDeltaPyData","Delta P_{y};#Delta P_{y} [MeV/c];Events",200,-300,300);
-
     TH1F *hDeltaPzData =
     new TH1F("hDeltaPzData","Delta P_{z};#Delta P_{z} [MeV/c];Events",200,-300,300);
 
-    TH1F *hBetaMC =
-    new TH1F("hBetaMC","#beta;#beta;Events",120,0.18,0.30);
+    TH1F *hDeltaPxacc0MC =
+    new TH1F("hDeltaPxacc0MC","Delta P_{x};#Delta P_{x} [MeV/c];Events",200,-300,300);
+    TH1F *hDeltaPx_1Acc =    
+    new TH1F("hDeltaPx_1Acc","Exactly 1 accidental;#Delta P_{x} [MeV/c];Events",200, -300, 300);
+    TH1F *hDeltaPx_2Acc = 
+    new TH1F("hDeltaPx_2Acc","Exactly 2 accidentals;#Delta P_{x} [MeV/c];Events",200, -300, 300);
 
+    TH1F *hDeltaPyacc0MC =
+    new TH1F("hDeltaPyacc0MC","Delta P_{y};#Delta P_{y} [MeV/c];Events",200,-300,300);
+    TH1F *hDeltaPy_1Acc =    
+    new TH1F("hDeltaPy_1Acc","Exactly 1 accidental;#Delta P_{y} [MeV/c];Events",200, -300, 300);
+    TH1F *hDeltaPy_2Acc = 
+    new TH1F("hDeltaPy_2Acc","Exactly 2 accidentals;#Delta P_{y} [MeV/c];Events",200, -300, 300);
+
+    TH1F *hDeltaPzacc0MC =
+    new TH1F("hDeltaPzacc0MC","Delta P_{z};#Delta P_{z} [MeV/c];Events",200,-300,300);
+    TH1F *hDeltaPz_1Acc =    
+    new TH1F("hDeltaPz_1Acc","Exactly 1 accidental;#Delta P_{z} [MeV/c];Events",200, -300, 300);
+    TH1F *hDeltaPz_2Acc = 
+    new TH1F("hDeltaPz_2Acc","Exactly 2 accidentals;#Delta P_{z} [MeV/c];Events",200, -300, 300);
+
+    TH1F *hBetaMC =
+    new TH1F("hBetaMC","#beta;#beta;Events",120,0.18,0.28);
     TH1F *hBetaData =
-    new TH1F("hBetaData","#beta;#beta;Events",120,0.18,0.30);
+    new TH1F("hBetaData","#beta;#beta;Events",120,0.18,0.28);
+
+    TH1F *hBetaacc0MC =
+    new TH1F("hBetaacc0MC","#beta;#beta;Events",120,0.18,0.28);
+    TH1F *hBeta_1Acc =    
+    new TH1F("hBeta_1Acc","Exactly 1 accidental;#beta;Events",120,0.18,0.28);
+    TH1F *hBeta_2Acc = 
+    new TH1F("hBeta_2Acc","Exactly 2 accidentals;#beta;Events",120,0.18,0.28);
 
     TH1F *hPosoEnergyMC =
     new TH1F("hPosoEnergyMC","KL crash energy;E_{KL crash} [MeV];Events",100,0,800);
-
     TH1F *hPosoEnergyData =
     new TH1F("hPosoEnergyData","KL crash energy;E_{KL crash} [MeV];Events",100,0,800);
 
+    TH1F *hPosoEnergyacc0MC =
+    new TH1F("hPosoEnergyacc0MC","KL crash energy;E_{KL crash} [MeV];Events",100,0,800);
+    TH1F *hPosoEnergy_1Acc =    
+    new TH1F("hPosoEnergy_1Acc","Exactly 1 accidental;E_{KL crash} [MeV];Events",100,0,800);
+    TH1F *hPosoEnergy_2Acc = 
+    new TH1F("hPosoEnergy_2Acc","Exactly 2 accidentals;E_{KL crash} [MeV];Events",100,0,800);
+
     TH1F *hDeltaEMC =
     new TH1F("hDeltaEMC","#Delta E_{K_{S}};E_{K_{S}}^{crash}-E_{K_{S}}^{4#gamma} [MeV];Events",200,-300,300);
-
     TH1F *hDeltaEData =
     new TH1F("hDeltaEData","#Delta E_{K_{S}};E_{K_{S}}^{crash}-E_{K_{S}}^{4#gamma} [MeV];Events",200,-300,300);
 
-    // Long64_t nLowPnum0 = 0;
-    // Long64_t nLowPnumNonZero = 0;
-    // Long64_t nHighPnum0 = 0;
-    // Long64_t nHighPnumNonZero = 0;
-    // Long64_t nSelectedEvents = 0;
+    TH1F *hDeltaEacc0MC =
+    new TH1F("hDeltaEacc0MC","#Delta E_{K_{S}};E_{K_{S}}^{crash}-E_{K_{S}}^{4#gamma} [MeV];Events",200,-300,300);
+    TH1F *hDeltaE_1Acc =    
+    new TH1F("hDeltaE_1Acc","Exactly 1 accidental;#Delta E [MeV];Events",200, -300, 300);
+    TH1F *hDeltaE_2Acc = 
+    new TH1F("hDeltaE_2Acc","Exactly 2 accidentals;#Delta E [MeV];Events",200, -300, 300);
 
-    // cout << "Before event loop" << endl;
 
     Long64_t Nmc = mc.GetEntries();
     for(Long64_t iev = 0; iev < Nmc; ++iev)
@@ -171,105 +258,23 @@ void accidental_check(const char *output = "accidental_check.root"){
 
         if (poso[4] > 650.0) continue;
 
-        // Sprawdzamy wszystkie cztery klastry
-        bool noAccidentals = true;
+        int nAcc = 0;
+        bool validEvent = true;
 
-        for (int j = 0; j < 4; ++j) {
-            int cluster = speng[j];
+        for (int i = 0; i < npronti; i++) {
+            int cluster = speng[i];
 
-            if (cluster < 0 || cluster >= 100 ||
-                pnum1[cluster] != 0) {
-                noAccidentals = false;
+            if (cluster < 0 || cluster >= 100) {
+                validEvent = false;
                 break;
             }
+
+            if (pnum1[cluster] == 0) {
+                ++nAcc;
+            }
         }
-        if (!noAccidentals) continue;
-
-        //++nSelectedEvents;
-
-        // // Surowa energia crashu KL, przed korektą jej skali
-        // double EcrashRaw = poso[4];
-
-        // bool lowE = EcrashRaw < 650.0;
-        // bool highE = EcrashRaw > 650.0;
-
-        // // Sprawdź najpierw indeksy wszystkich czterech klastrów
-        // int clusterIndex[4];
-        // bool validIndices = true;
-
-        // for(int j = 0; j < 4; ++j)
-        // {
-        //     clusterIndex[j] = speng[j];
-
-        //     if(clusterIndex[j] < 0 || clusterIndex[j] >= 100)
-        //     {
-        //         validIndices = false;
-        //         break;
-        //     }
-        // }
-
-        // Analizujemy cztery klastry fotonowe w każdym zdarzeniu
-        // for(int j = 0; j < 4; ++j)
-        // {
-        //     int cluster = clusterIndex[j];
-
-        //     // Robocza klasyfikacja na podstawie pnum1
-        //     bool candidateAccidental = (pnum1[cluster] == 0);
-
-        //     if(candidateAccidental)
-        //         ++nAccCandidates;
-
-        //     // Lokalna kopia energii klastra.
-        //     // Stosujemy tę samą korektę skali energii co w głównej analizie,
-        //     // ale nie zmieniamy tablicy energ[j].
-        //     // double Ecluster = energ[j];
-
-        //     // int energyBin = (int)(Ecluster / 10.0);
-
-        //     // double Rxy = sqrt(
-        //     //     coord[j][0] * coord[j][0] +
-        //     //     coord[j][1] * coord[j][1]
-        //     // );
-
-        //     // if(Rxy >= 200.0)
-        //     //     Ecluster *= (1.053 - 0.001 * energyBin);
-        //     // else
-        //     //     Ecluster *= (1.050 - 0.001 * energyBin);
-
-        //     // Podział według energii crashu oraz pnum1
-        //     if(lowE)
-        //     {
-        //         if(candidateAccidental)
-        //         {
-        //             hClusterELowPnum0->Fill(energ[j]);
-        //             //++nLowPnum0;
-        //         }
-        //         else
-        //         {
-        //             hClusterELowPnumNonZero->Fill(energ[j]);
-        //             //++nLowPnumNonZero;
-        //         }
-        //     }
-        //     else // highE
-        //     {
-        //         if(candidateAccidental)
-        //         {
-        //             hClusterEHighPnum0->Fill(energ[j]);
-        //             //++nHighPnum0;
-        //         }
-        //         else
-        //         {
-        //             hClusterEHighPnumNonZero->Fill(energ[j]);
-        //             //++nHighPnumNonZero;
-        //         }
-        //     }
-        // }
-
-        // Liczba kandydatów na accidentale w całym zdarzeniu
-        // if(lowE)
-        //     hNAccCandidatesLow->Fill(nAccCandidates);
-        // else
-        //     hNAccCandidatesHigh->Fill(nAccCandidates);
+        // czy zdarzenie pozostało poprawne? Wykrzyknik oznacza negację.
+        if (!validEvent) continue;
 
         //-----------------------//
         //    KS from 4 gamma    //
@@ -278,7 +283,7 @@ void accidental_check(const char *output = "accidental_check.root"){
         TLorentzVector KS(0.,0.,0.,0.);
         TLorentzVector gamma[4];
 
-        for(int i=0;i<4;i++)
+        for(int i = 0; i < 4; i++)
         {
             double x = coord[i][0];
             double y = coord[i][1];
@@ -323,9 +328,33 @@ void accidental_check(const char *output = "accidental_check.root"){
         hDeltaPxMC->Fill(deltaPx, wMC);
         hDeltaPyMC->Fill(deltaPy, wMC);
         hDeltaPzMC->Fill(deltaPz, wMC);
-
         hBetaMC->Fill(beta,wMC);
         hPosoEnergyMC->Fill(poso[4],wMC);
+
+        if(nAcc == 0){
+            hDeltaEacc0MC->Fill(deltaE,  wMC);
+            hDeltaPxacc0MC->Fill(deltaPx, wMC);
+            hDeltaPyacc0MC->Fill(deltaPy, wMC);
+            hDeltaPzacc0MC->Fill(deltaPz, wMC);
+            hBetaacc0MC->Fill(beta,wMC);
+            hPosoEnergyacc0MC->Fill(poso[4],wMC);
+        }
+        else if(nAcc == 1){
+            hDeltaE_1Acc->Fill(deltaE, wMC);
+            hDeltaPx_1Acc->Fill(deltaPx, wMC);
+            hDeltaPy_1Acc->Fill(deltaPy, wMC);
+            hDeltaPz_1Acc->Fill(deltaPz, wMC);
+            hBeta_1Acc->Fill(beta, wMC);
+            hPosoEnergy_1Acc->Fill(poso[4], wMC);
+        }
+        else if(nAcc == 2){
+            hDeltaE_2Acc->Fill(deltaE, wMC);
+            hDeltaPx_2Acc->Fill(deltaPx, wMC);
+            hDeltaPy_2Acc->Fill(deltaPy, wMC);
+            hDeltaPz_2Acc->Fill(deltaPz, wMC);
+            hBeta_2Acc->Fill(beta, wMC);
+            hPosoEnergy_2Acc->Fill(poso[4], wMC);
+        }
     }
 
     Long64_t Ndata = data.GetEntries();
@@ -395,166 +424,68 @@ void accidental_check(const char *output = "accidental_check.root"){
 
     }
 
-    //cout << "After event loop" << endl;
+    TCanvas *c = new TCanvas("cComparison", "MC vs Data", 900, 700);
 
-    // cout << "\n=== ACCIDENTAL CHECK ===\n";
-    // cout << "MC entries: " << Nmc << endl;
-    // cout << "Events passing basic selection: "
-    //     << nSelectedEvents << endl;
-
-    // cout << "\nEcrash < 650 MeV:\n";
-    // cout << "  pnum1 == 0: " << nLowPnum0 << " clusters\n";
-    // cout << "  pnum1 != 0: " << nLowPnumNonZero << " clusters\n";
-
-    // cout << "\nEcrash > 650 MeV:\n";
-    // cout << "  pnum1 == 0: " << nHighPnum0 << " clusters\n";
-    // cout << "  pnum1 != 0: " << nHighPnumNonZero << " clusters\n";
-
-    TCanvas *c = new TCanvas("cComparison", "MC vs Data", 790,700);
-
-    const char *pdf =
-        "KLOE_analysis_results/accidentals_under650MeV_pnum1_EQUAL_zero.pdf";
+    const char *pdf = "KLOE_analysis_results/accidentals_comparison.pdf";
 
     c->Print(Form("%s[", pdf));
 
-    // Delta P
+    // Delta Px
     hDeltaPxMC->GetXaxis()->SetRangeUser(-200, 200);
-    DrawMCData(hDeltaPxMC, hDeltaPxData, c, pdf);
+    DrawMCData(hDeltaPxMC, hDeltaPxacc0MC, hDeltaPx_1Acc, hDeltaPx_2Acc,
+            hDeltaPxData, c, pdf);
 
+    // Delta Py
     hDeltaPyMC->GetXaxis()->SetRangeUser(-200, 200);
-    DrawMCData(hDeltaPyMC, hDeltaPyData, c, pdf);
+    DrawMCData(hDeltaPyMC, hDeltaPyacc0MC, hDeltaPy_1Acc, hDeltaPy_2Acc,
+            hDeltaPyData, c, pdf);
 
+    // Delta Pz
     hDeltaPzMC->GetXaxis()->SetRangeUser(-200, 200);
-    DrawMCData(hDeltaPzMC, hDeltaPzData, c, pdf);
+    DrawMCData(hDeltaPzMC, hDeltaPzacc0MC, hDeltaPz_1Acc, hDeltaPz_2Acc,
+            hDeltaPzData, c, pdf);
 
     // Beta
-    DrawMCData(hBetaMC, hBetaData, c, pdf);
+    DrawMCData(hBetaMC, hBetaacc0MC, hBeta_1Acc, hBeta_2Acc,
+            hBetaData, c, pdf);
 
-    // Energia crashu KL
+    // Energia crashu
     hPosoEnergyMC->GetXaxis()->SetRangeUser(100, 800);
-    DrawMCData(hPosoEnergyMC, hPosoEnergyData, c, pdf);
+    DrawMCData(hPosoEnergyMC, hPosoEnergyacc0MC, hPosoEnergy_1Acc, hPosoEnergy_2Acc,
+            hPosoEnergyData, c, pdf);
 
     // Delta E
-    DrawMCData(hDeltaEMC, hDeltaEData, c, pdf);
+    DrawMCData(hDeltaEMC, hDeltaEacc0MC, hDeltaE_1Acc, hDeltaE_2Acc,
+            hDeltaEData, c, pdf);
+
+
+    // Delta Px
+    DrawStackData(hDeltaPx_1Acc,hDeltaPx_2Acc,hDeltaPxData,c,pdf,
+        "#Delta P_{x};#Delta P_{x} [MeV/c];Events");
+
+    // Delta Py
+    DrawStackData(hDeltaPy_1Acc,hDeltaPy_2Acc,hDeltaPyData,c,pdf,
+        "#Delta P_{y};#Delta P_{y} [MeV/c];Events");
+
+    // Delta Pz
+    DrawStackData(hDeltaPz_1Acc,hDeltaPz_2Acc,hDeltaPzData,c,pdf,
+        "#Delta P_{z};#Delta P_{z} [MeV/c];Events");
+
+    // Beta
+    DrawStackData(hBeta_1Acc,hBeta_2Acc,hBetaData,c,pdf,
+        "#beta;#beta;Events");
+
+    // Energia crashu
+    DrawStackData(hPosoEnergy_1Acc,hPosoEnergy_2Acc,hPosoEnergyData,c,pdf,
+        "KL crash energy;E_{KL crash} [MeV];Events");
+
+    // Delta E
+    DrawStackData(hDeltaE_1Acc,hDeltaE_2Acc,hDeltaEData,c,pdf,
+        "#Delta E;#Delta E [MeV];Events");
 
     c->Print(Form("%s]", pdf));
 
     delete c;
-    // fout.Close();
-
-    // TCanvas *c1 = new TCanvas("c1", "Cluster energy spectra", 1200, 550);
-    // c1->Divide(2, 1);
-
-    // hClusterELowPnum0->SetLineColor(kRed + 1);
-    // hClusterELowPnumNonZero->SetLineColor(kBlue + 1);
-    // hClusterEHighPnum0->SetLineColor(kRed + 1);
-    // hClusterEHighPnumNonZero->SetLineColor(kBlue + 1);
-
-    // hClusterELowPnum0->SetLineWidth(2);
-    // hClusterELowPnumNonZero->SetLineWidth(2);
-    // hClusterEHighPnum0->SetLineWidth(2);
-    // hClusterEHighPnumNonZero->SetLineWidth(2);
-
-    // c1->cd(1);
-
-    // double maxLow = max(hClusterELowPnum0->GetMaximum(),hClusterELowPnumNonZero->GetMaximum());
-
-    // hClusterELowPnum0->SetMaximum(1.15 * maxLow);
-    // hClusterELowPnum0->Draw("HIST");
-    // hClusterELowPnumNonZero->Draw("HIST SAME");
-
-    // TLegend *legLow = new TLegend(0.58, 0.72, 0.88, 0.88);
-    // legLow->AddEntry(hClusterELowPnum0, "pnum1 = 0", "l");
-    // legLow->AddEntry(hClusterELowPnumNonZero, "pnum1 != 0", "l");
-    // legLow->Draw();
-
-    // c1->cd(2);
-
-    // double maxHigh = max(hClusterEHighPnum0->GetMaximum(),hClusterEHighPnumNonZero->GetMaximum());
-
-    // hClusterEHighPnum0->SetMaximum(1.15 * maxHigh);
-    // hClusterEHighPnum0->Draw("HIST");
-    // hClusterEHighPnumNonZero->Draw("HIST SAME");
-
-    // TLegend *legHigh = new TLegend(0.58, 0.72, 0.88, 0.88);
-    // legHigh->AddEntry(hClusterEHighPnum0, "pnum1 = 0", "l");
-    // legHigh->AddEntry(hClusterEHighPnumNonZero, "pnum1 != 0", "l");
-    // legHigh->Draw();
-
-
-    // TCanvas *c2 = new TCanvas("c2", "Accidental candidates per event", 1000, 500);
-    // c2->Divide(2, 1);
-
-    // c2->cd(1);
-    // hNAccCandidatesLow->SetLineColor(kRed + 1);
-    // hNAccCandidatesLow->SetLineWidth(2);
-    // hNAccCandidatesLow->Draw("HIST");
-
-    // c2->cd(2);
-    // hNAccCandidatesHigh->SetLineColor(kBlue + 1);
-    // hNAccCandidatesHigh->SetLineWidth(2);
-    // hNAccCandidatesHigh->Draw("HIST");
-
-
-    // cout << "\n=== HISTOGRAM DIAGNOSTICS ===" << endl;
-
-    // cout << "Low pnum0 entries: "
-    //     << hClusterELowPnum0->GetEntries() << endl;
-
-    // cout << "Low pnumNonZero entries: "
-    //     << hClusterELowPnumNonZero->GetEntries() << endl;
-
-    // cout << "High pnum0 entries: "
-    //     << hClusterEHighPnum0->GetEntries() << endl;
-
-    // cout << "High pnumNonZero entries: "
-    //     << hClusterEHighPnumNonZero->GetEntries() << endl;
-
-    // cout << "Low histogram maximum: "
-    //     << hClusterELowPnum0->GetMaximum() << endl;
-
-    // cout << "High histogram maximum: "
-    //     << hClusterEHighPnum0->GetMaximum() << endl;
-
-    //     cout << "Underflow: "
-    //     << hClusterELowPnum0->GetBinContent(0) << endl;
-
-    // cout << "Overflow: "
-    //     << hClusterELowPnum0->GetBinContent(
-    //             hClusterELowPnum0->GetNbinsX() + 1) << endl;
-
-    // // cout << "Before canvas 1 SaveAs" << endl;
-    // c1->SaveAs("KLOE_analysis_results/accidental_check_1.pdf");
-
-    // // cout << "Before canvas 2 SaveAs" << endl;
-    // c2->SaveAs("KLOE_analysis_results/accidental_check_2.pdf");
-
-    // cout << "Before writing histograms" << endl;
-    // fout.cd();
-
-    hClusterELowPnum0->Write();
-    hClusterELowPnumNonZero->Write();
-    hClusterEHighPnum0->Write();
-    hClusterEHighPnumNonZero->Write();
-
-    hNAccCandidatesLow->Write();
-    hNAccCandidatesHigh->Write();
-
-    hDeltaPxMC->Write();
-    hDeltaPxData->Write();
-    hDeltaPyMC->Write();
-    hDeltaPyData->Write();
-    hDeltaPzMC->Write();
-    hDeltaPzData->Write();
-
-    hBetaMC->Write();
-    hBetaData->Write();
-    hPosoEnergyMC->Write();
-    hPosoEnergyData->Write();
-    hDeltaEMC->Write();
-    hDeltaEData->Write();
-
-    // cout << "Before closing output file" << endl;
     fout.Close();
 
 }
