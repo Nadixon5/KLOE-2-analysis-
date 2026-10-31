@@ -20,8 +20,11 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
     const double c = 29.9792458;   // cm/ns  
 
     // Wagi (tak musi być!)
-    const double wMC = 0.7 * 400;
+    const double wMC = 1.0 * 400;
     const double wData = 1.0 * 400;
+
+    double accidentalProbability = 0.4359;
+    TRandom3 rand(0);
 
     // Z dopasowania funkcji Gaussa
     const double pionMass1SigmaMC = 21.1367;
@@ -41,9 +44,6 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
 
     const double pionAngleSigmaMC = 3.46682;
     const double pionAngleSigmaData = 3.64829;
-
-    double accidentalProbability = 0.50;
-    TRandom3 rand(0);
 
     // tak musi być, żebym nie połączyła wszystkie pliki w jeden histogram!
     TChain mc("KS_3PI0/h1");
@@ -121,25 +121,18 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
 
     // TH1F *hPxMC =
     // new TH1F("hPxMC","P_{x};P_{x} [MeV/c];Events",200,-250,250);
-
     // TH1F *hPxData =
     // new TH1F("hPxData","P_{x};P_{x} [MeV/c];Events",200,-250,250);
-
     // TH1F *hPyMC =
     // new TH1F("hPyMC","P_{y};P_{y} [MeV/c];Events",200,-250,250);
-
     // TH1F *hPyData =
     // new TH1F("hPyData","P_{y};P_{y} [MeV/c];Events",200,-250,250);
-
     // TH1F *hPzMC =
     // new TH1F("hPzMC","P_{z};P_{z} [MeV/c];Events",200,-250,250);
-
     // TH1F *hPzData =
     // new TH1F("hPzData","P_{z};P_{z} [MeV/c];Events",200,-250,250);
-
     // TH1F *hPMC =
     // new TH1F("hPMC","|P|;|P| [MeV/c];Events",200,0,250);
-
     // TH1F *hPData =
     // new TH1F("hPData","|P|;|P| [MeV/c];Events",200,0,250);
 
@@ -240,29 +233,31 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
     new TH2D("hBetaVsEcrashData","Data;#beta;E_{KL crash} [MeV]",100, 0.18, 0.28,100, 100, 800);
 
     //  Counters
-    // Long64_t nAllEventsMC   = 0;
-    // Long64_t nAftervetocosMC = 0;
-    // Long64_t nAfterCrflagMC = 0;
-    // Long64_t nAfterNprontiMC  = 0;
-    // Long64_t nAfterBetaMC    = 0;
-    // Long64_t nAfterCorrKLCrashEnergyMC = 0;
-    // Long64_t nAfterFilfowdMC = 0;
-    // Long64_t nAfterECLMC = 0; 
-    // Long64_t nAfterTrackVetoMC = 0; 
+    Long64_t nAllEventsMC   = 0;
+    Long64_t nAftervetocosMC = 0;
+    Long64_t nAfterCrflagMC = 0;
+    Long64_t nAfterNprontiMC  = 0;
+    Long64_t nAfterBetaMC    = 0;
+    Long64_t nAfterCorrKLCrashEnergyMC = 0;
+    Long64_t nAfterFilfowdMC = 0;
+    Long64_t nAfterECLMC = 0; 
+    Long64_t nAfterTrackVetoMC = 0; 
+    
+    Long64_t accidentalCount[11][11] = {};
     // Long64_t nAfterPhiwordmcRozne = 0;
     // Long64_t nAfterPhiwordmcRowne = 0;
     // Long64_t nAfterKswordmcRozne = 0;
     // Long64_t nAfterKswordmcRowne = 0;
 
-    // Long64_t nAllEventsData   = 0;
-    // Long64_t nAftervetocosData = 0;
-    // Long64_t nAfterCrflagData = 0;
-    // Long64_t nAfterNprontiData  = 0;
-    // Long64_t nAfterBetaData    = 0;
-    // Long64_t nCutData = 0;
-    // Long64_t nAfterFilfowdData = 0;
-    // Long64_t nAfterECLData = 0; 
-    // Long64_t nAfterTrackVetoData = 0; 
+    Long64_t nAllEventsData   = 0;
+    Long64_t nAftervetocosData = 0;
+    Long64_t nAfterCrflagData = 0;
+    Long64_t nAfterNprontiData  = 0;
+    Long64_t nAfterBetaData    = 0;
+    Long64_t nCutData = 0;
+    Long64_t nAfterFilfowdData = 0;
+    Long64_t nAfterECLData = 0; 
+    Long64_t nAfterTrackVetoData = 0; 
 
     //-------------------------------------------------------//
     // -------------------Event loop dla mc------------------//
@@ -275,10 +270,14 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
         mc.GetEntry(iev);
 
         // hNprontiMC->Fill(npronti,wMC);
-
-        nAllEventsMC++;
+        // nAllEventsMC++;
 
         //-----------! WARUNKI !-----------//
+
+        //---NPRONTI---//
+        // if(npronti!=4) continue;
+        // nAfterNprontiMC++;
+        if(npronti < 1 || npronti > 7) continue;
 
         //---ECLTAG---//
         if(Ecltag == 0) continue;
@@ -296,12 +295,12 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
         if(vetocos>0) continue;
         nAftervetocosMC++;
 
-        //---NPRONTI---//
-        if(npronti!=4) continue;
-        nAfterNprontiMC++;
+        //---NEW ENERGY CUT---///
+        double Ecrash = poso[4];
+        if(Ecrash > 650) continue;
 
-        //---BETA SMEARING---//
-        double betaSmeared = beta * (1.0 + 0.0142* gRandom->Gaus(0.0, 1.0)) + 0.00022;
+        //---TRACK VETO---//
+        if(nsel[0] > 0) continue;
 
         //---KSWORDMC---//
 
@@ -316,46 +315,62 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
         // nAfterPhiwordmcRozne++;
         // if (phiwordmc != 1034) continue;
         // nAfterPhiwordmcRowne++;
-        
-        //---NEW ENERGY CUT---///
-        double Ecrash = poso[4];
-        if(Ecrash > 650) continue;
 
-        //--- ACCIDENTALS ---//
+        //--- ACCIDENTAL CORRECTION ---//
 
         int nAccidental = 0;
+
+        int survivingPrompt[10];
+        int nSurviving = 0;
 
         for(int j = 0; j < npronti; j++)
         {
             int cluster = speng[j];
 
-            if(pnum1[cluster] == 0 ){
-                
-                if(rand.Rndm() < accidentalProbability) nAccidental++;
+            if(pnum1[cluster] == 0)
+            {
+                if(rand.Rndm() < accidentalProbability)
+                {
+                    nAccidental++;
+                    continue;
+                }
             }
+
+            // Foton przetrwał korekcję
+            survivingPrompt[nSurviving++] = j;
         }
 
-        int nprontiCorrected = npronti - nAccidental;
+        accidentalCount[(int)npronti][nAccidental]++;
 
-        hNprontiMC->Fill(nprontiCorrected,wMC);
+        int nprontiCorrected = nSurviving;
+
+        hNprontiMC->Fill(nprontiCorrected, wMC);
+
+        if(nprontiCorrected != 4) continue;
+
+
+        //---BETA SMEARING---//
+        double betaSmeared = beta * (1.0 + 0.0142* gRandom->Gaus(0.0, 1.0)) + 0.00022;
 
         //---KOREKCJA SKALI ENERGII---//
-        for(int i=0; i<npronti; i++) {
+        for(int i=0; i<4; i++) {
 
-            int j = (int)(energ[i] / 10.0);
+            int idx = survivingPrompt[i];
+
+            int j = (int)(energ[idx] / 10.0);
 
             double Rxy = sqrt(
-                coord[i][0]*coord[i][0] +
-                coord[i][1]*coord[i][1]
+                coord[idx][0]*coord[idx][0] +
+                coord[idx][1]*coord[idx][1]
             );
 
             if(Rxy >= 200.0) {
 
-                energ[i] *= (1.053 - 0.001*j);
+                energ[idx] *= (1.053 - 0.001*j);
 
             } else {
 
-                energ[i] *= (1.050 - 0.001*j);
+                energ[idx] *= (1.050 - 0.001*j);
             }
         }
 
@@ -383,9 +398,6 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
 
         poso[4] = Ecrash;
 
-        //---NOWE TRACK VETO JEZUS MARIA---//
-        if(nsel[0] > 0) continue;
-
         //--- CUT NA SKORYGOWANĄ ENERGIĘ ---//
         //if (poso[4] < 150.) continue;
         //nAfterCorrKLCrashEnergyMC++;
@@ -403,10 +415,12 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
 
         for(int i=0;i<4;i++)
         {
-            double x = coord[i][0];
-            double y = coord[i][1];
-            double z = coord[i][2];
-            double E = energ[i];
+            int idx = survivingPrompt[i];
+
+            double x = coord[idx][0];
+            double y = coord[idx][1];
+            double z = coord[idx][2];
+            double E = energ[idx];
 
             TVector3 r(
                 x - Vp[0],
@@ -580,10 +594,12 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
         // coord[i][4] = t [ns]
         // t_gamma = t - R/c
 
-        for(int i = 0; i < npronti; i++)
-        {
-            double R = coord[i][3];   
-            double t = coord[i][4];   
+        for(int i = 0; i < 4; i++)
+{
+            int idx = survivingPrompt[i];
+
+            double R = coord[idx][3];
+            double t = coord[idx][4];
 
             tGamma[i] = t - R/c;
 
@@ -594,16 +610,14 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
 
         double maxDeltaT = 0.0;
 
-        for(int i=0; i<npronti; i++) {
+        for(int i = 0; i < 4; i++) {
 
-            for(int j=i+1; j<npronti; j++) {
+            for(int j = i+1; j < 4; j++) {
 
                 double deltaT = tGamma[i] - tGamma[j];
 
-                // wszystkie różnice - ze znakiem
                 hDeltaTMC->Fill(deltaT,wMC);
 
-                // największa wartość bezwzględna
                 double absDeltaT = fabs(deltaT);
 
                 if(absDeltaT > maxDeltaT)
@@ -611,18 +625,21 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
             }
         }
 
-        // rozkład maksymalnej różnicy w zdarzeniu
         hDeltaTMaxMC->Fill(maxDeltaT,wMC);
 
         double Rmin = 1e9;
 
-        for(int i = 0; i < npronti; i++) {
+        for(int i = 0; i < 4; i++) {
 
-            for(int j = i + 1; j < npronti; j++) {
+            int idx1 = survivingPrompt[i];
 
-                double dx = coord[i][0] - coord[j][0];
-                double dy = coord[i][1] - coord[j][1];
-                double dz = coord[i][2] - coord[j][2];
+            for(int j = i + 1; j < 4; j++) {
+
+                int idx2 = survivingPrompt[j];
+
+                double dx = coord[idx1][0] - coord[idx2][0];
+                double dy = coord[idx1][1] - coord[idx2][1];
+                double dz = coord[idx1][2] - coord[idx2][2];
 
                 double distance = sqrt(dx*dx + dy*dy + dz*dz);
 
@@ -631,8 +648,7 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
             }
         }
 
-        //if(Rmin < 1e8)
-            hRminMC->Fill(Rmin,wMC);
+        hRminMC->Fill(Rmin,wMC);
 
     }
 
@@ -646,11 +662,11 @@ void KSReco_v1(const char *output="KS_Reconstructed.root")
 
         data.GetEntry(iev);
 
-        hNprontiData->Fill(npronti,wData);
+        // hNprontiData->Fill(npronti,wData);
 
         nAllEventsData++;
 
-        //---NOWE TRACK VETO JEZUS MARIA---//
+        //---TRACK VETO---//
         if(nsel[0] > 0) continue;
 
         //---ECLTAG---//
@@ -973,8 +989,8 @@ fout.cd();
     hBetaData->Write();
     hPosoEnergyMC->Write();
     hPosoEnergyData->Write();
-    hNprontiMC->Write();
-    hNprontiData->Write();
+    // hNprontiMC->Write();
+    // hNprontiData->Write();
 
     hRminMC->Write();
     hRminData->Write();

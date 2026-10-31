@@ -11,7 +11,7 @@ void npronti_check()
     gSystem->Load("libPhysics");
     gStyle->SetOptStat(0);
 
-    double accidentalProbability = 0.50;
+    double accidentalProbability = 0.4359;
     TRandom3 rand(0);
 
     Char_t npronti;
@@ -62,25 +62,25 @@ void npronti_check()
     data.SetBranchAddress("Ecltag", &Ecltag);
 
     TH1F *hnprontiMCAll =
-    new TH1F("hnprontiMCAll","npronti;N_{prompt};Events",11, -0.5, 10.5);
+    new TH1F("hnprontiMCAll","npronti;N_{prompt};Events",7, 0.5, 7.5);
 
     TH1F *hnprontiMCAllveto =
-    new TH1F("hnprontiMCAllveto","npronti;N_{prompt};Events",11, -0.5, 10.5);
+    new TH1F("hnprontiMCAllveto","npronti;N_{prompt};Events",7, 0.5, 7.5);
 
     TH1F *hnprontiMCKs =
-    new TH1F("hnprontiMCKs","npronti;N_{prompt};Events",11, -0.5, 10.5);
+    new TH1F("hnprontiMCKs","npronti;N_{prompt};Events",7, 0.5, 7.5);
 
     TH1F *hnprontiMCKsveto =
-    new TH1F("hnprontiMCKsveto","npronti;N_{prompt};Events",11, -0.5, 10.5);
+    new TH1F("hnprontiMCKsveto","npronti;N_{prompt};Events",7, 0.5, 7.5);
 
     TH1F *hnprontiData =
-    new TH1F("hnprontiData","npronti;N_{prompt};Events",11, -0.5, 10.5);
+    new TH1F("hnprontiData","npronti;N_{prompt};Events",7, 0.5, 7.5);
 
     TH1F *hnprontiDataveto =
-    new TH1F("hnprontiDataveto","npronti;N_{prompt};Events",11, -0.5, 10.5);
+    new TH1F("hnprontiDataveto","npronti;N_{prompt};Events",7, 0.5, 7.5);
 
     TH1F *hnprontiMCPnum1Corrected =
-    new TH1F("hnprontiMCPnum1Corrected","npronti corrected for pnum1;N_{prompt};Events",11, -0.5, 10.5);
+    new TH1F("hnprontiMCPnum1Corrected","npronti corrected for pnum1;N_{prompt};Events",7, 0.5, 7.5);
 
 
     //Long64_t nprontiCount[11] = {0};
@@ -118,7 +118,7 @@ void npronti_check()
     {
         mc.GetEntry(iev);
 
-        if(npronti < 0 || npronti > 10) continue;
+        if(npronti < 1 || npronti > 7) continue;
 
         //--- NEW CONDITION ---//
         double Ecrash = poso[4];
@@ -141,15 +141,22 @@ void npronti_check()
         // if (Kswordmc == 1799)
         //     hnprontiMCKs->Fill(npronti);
 
-        //--- ACCIDENTALS ---//
+        //--- Track veto ---//
+        if(nsel[0] > 0) continue;
 
+        // if (Kswordmc == 1799)
+        //     hnprontiMCKsveto->Fill(npronti);
+
+        hnprontiMCAllveto->Fill(npronti);
+
+        //--- ACCIDENTALS ---//
         int nAccidental = 0;
 
         for(int j = 0; j < npronti; j++)
         {
-            int cluster = speng[j];
+            int cluster = speng[j]; 
 
-            if(pnum1[cluster] == 0 && pnum2[cluster] == 0 && pnum3[cluster] == 0){
+            if(pnum1[cluster] == 0){ //&& pnum2[cluster] == 0 && pnum3[cluster] == 0
                 
                 if(rand.Rndm() < accidentalProbability) nAccidental++;
             }
@@ -161,13 +168,6 @@ void npronti_check()
 
         hnprontiMCPnum1Corrected->Fill(nprontiCorrected);
 
-        //--- Track veto ---//
-        if(nsel[0] > 0) continue;
-
-        hnprontiMCAllveto->Fill(npronti);
-
-        // if (Kswordmc == 1799)
-        //     hnprontiMCKsveto->Fill(npronti);
     }
 
     // cout << endl;
@@ -211,7 +211,7 @@ void npronti_check()
     {
         data.GetEntry(iev);
 
-        if(npronti < 0 || npronti > 10) continue;
+        if(npronti < 1 || npronti > 7) continue;
 
         //--- NEW CONDITION ---//
         double Ecrash = poso[4];
@@ -290,6 +290,6 @@ void npronti_check()
 
     c1->Update();
 
-    c1->Print("KLOE_analysis_results/npronti_energycut_ON.pdf");
+    c1->Print("KLOE_analysis_results/npronti_energycut_ON_new_probability.pdf");
 
 }

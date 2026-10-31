@@ -38,7 +38,7 @@ void DrawMCData(TH1 *hMC,TH1 *hData,TCanvas *c,const char *pdf, bool normalizeMC
 // GŁÓWNE MACRO
 void PlotStyle(
     const char *input = "KS_Reconstructed.root",
-    const char *output = "KLOE_analysis_results/ks3pi0_basic_cuts_trackveto_energycut650MeV_ACCIDENTALS_bezinnych.pdf")
+    const char *output = "KLOE_analysis_results/ks3pi0_basic_cuts_trackveto_energycut650MeV_ACCIDENTALS_PROBABILITY_new.pdf")
 {
     gROOT->SetBatch(kTRUE);
 
@@ -163,8 +163,8 @@ void PlotStyle(
 
     if(hBetaMC && hBetaData){
         hBetaMC->GetXaxis()->SetRangeUser(0.18,0.30);
-        hBetaData->GetXaxis()->SetRangeUser(0.18,0.30);
-        hBetaMC->GetYaxis()->SetRangeUser(0,9800000);
+        // hBetaData->GetXaxis()->SetRangeUser(0.18,0.30);
+        // hBetaMC->GetYaxis()->SetRangeUser(0,9800000);
         DrawMCData(hBetaMC,hBetaData,c,output,true);
         //DrawMCData(hBetaData,hBetaMC,c,output,true);
     }
@@ -275,6 +275,7 @@ void PlotStyle(
                         "Beta vs KL crash energy MC",
                         800, 700);
 
+        hBetaVsEcrashMC->GetYaxis()->SetRangeUser(100,800);
         hBetaVsEcrashMC->SetStats(0);
         hBetaVsEcrashMC->Draw("COLZ");
 
@@ -293,6 +294,7 @@ void PlotStyle(
                         "Beta vs KL crash energy DATA",
                         800, 700);
 
+        hBetaVsEcrashData->GetYaxis()->SetRangeUser(100,800);
         hBetaVsEcrashData->SetStats(0);
         hBetaVsEcrashData->Draw("COLZ");
 

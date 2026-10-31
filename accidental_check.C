@@ -114,7 +114,7 @@ void DrawStackData(TH1 *mc1, TH1 *mc2,TH1 *data, TCanvas *c, const char *pdf, co
     delete hs;
 }
 
-void accidental_check(const char *output = "accidental_check.root"){
+void accidental_check(){
 
     gSystem->Load("libPhysics");
 
@@ -169,8 +169,6 @@ void accidental_check(const char *output = "accidental_check.root"){
     data.SetBranchAddress("filfowd", &filfowd);
     data.SetBranchAddress("Ecltag", &Ecltag);
     data.SetBranchAddress("nsel", nsel);
-
-    TFile fout(output, "RECREATE");
 
     TH1F *hDeltaPxMC =
     new TH1F("hDeltaPxMC","Delta P_{x};#Delta P_{x} [MeV/c];Events",200,-300,300);
